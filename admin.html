@@ -2,60 +2,66 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Rb_buy — Админ панель</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body{font-family:Consolas,monospace;background:#000;color:#0ff;margin:0;padding:20px}
-    h1{color:#00e0ff}
-    input,button{margin:8px 0;padding:8px;border-radius:6px;border:1px solid #0ff;background:#000;color:#0ff}
-    button{cursor:pointer;font-weight:600}
-    .hidden{display:none}
-    table{width:100%;border-collapse:collapse;margin-top:20px}
-    th,td{border:1px solid #0ff;padding:8px;text-align:left}
-    th{background:#001820}
+    body {font-family:Consolas, monospace;background:#000;color:#0ff;margin:0;padding:20px;}
+    h1 {color:#00e0ff;}
+    input,button {padding:10px;margin:6px 0;border:none;border-radius:6px;}
+    input {background:#111;color:#0ff;}
+    button {background:#00e0ff;color:#000;font-weight:bold;cursor:pointer;}
+    button:hover {background:#0ff;}
+    .order {background:#111;padding:14px;margin:10px 0;border:1px solid rgba(0,255,255,0.2);border-radius:6px;}
   </style>
 </head>
 <body>
-  <h1>Rb_buy — Админ панель</h1>
 
-  <div id="loginBox">
-    <p>Введите пароль:</p>
-    <input type="password" id="pwd">
-    <button onclick="login()">Войти</button>
-  </div>
+<h1>Админ панель Rb_buy</h1>
+<div id="loginBox">
+  <p>Введите пароль администратора:</p>
+  <input type="password" id="adminPass">
+  <button onclick="checkPass()">Войти</button>
+</div>
 
-  <div id="panel" class="hidden">
-    <h2>Заказы</h2>
-    <table>
-      <thead>
-        <tr><th>Имя</th><th>Robux</th><th>Цена</th><th>Дата</th></tr>
-      </thead>
-      <tbody id="orders"></tbody>
-    </table>
-  </div>
+<div id="panel" style="display:none;">
+  <h2>Заявки</h2>
+  <div id="orders"></div>
+</div>
 
-  <script>
-    const PASS="021455Rr";
-    function login(){
-      const v=document.getElementById('pwd').value;
-      if(v===PASS){
-        document.getElementById('loginBox').style.display='none';
-        document.getElementById('panel').classList.remove('hidden');
-        renderOrders();
-      }else alert('Неверный пароль');
-    }
-    function renderOrders(){
-      const orders=JSON.parse(localStorage.getItem('orders')||'[]');
-      const tbody=document.getElementById('orders');
-      tbody.innerHTML='';
-      orders.forEach(o=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${o.name}</td><td>${o.robux}</td><td>${o.price} ₽</td><td>${o.date}</td>`;
-        tbody.appendChild(tr);
-      });
-    }
-  </script>
+<script>
+  const ADMIN_PASSWORD = "021455Rr";
+
+  function checkPass(){
+    if(adminPass.value === ADMIN_PASSWORD){
+      loginBox.style.display="none";
+      panel.style.display="block";
+      loadOrders();
+    } else alert("Неверный пароль");
+  }
+
+  function loadOrders(){
+    let orders = JSON.parse(localStorage.getItem("orders")||"[]");
+    const box = document.getElementById("orders");
+    box.innerHTML="";
+    orders.forEach((o,i)=>{
+      const div = document.createElement("div");
+      div.className="order";
+      div.innerHTML=`<b>${o.user}</b> — ${o.count} Robux = ${o.cost}₽ | Статус: ${o.status} 
+        <button onclick="confirmOrder(${i})">Подтвердить</button>`;
+      box.appendChild(div);
+    });
+  }
+
+  function confirmOrder(index){
+    let orders = JSON.parse(localStorage.getItem("orders")||"[]");
+    orders[index].status="Оплачено ✅";
+    localStorage.setItem("orders", JSON.stringify(orders));
+    loadOrders();
+  }
+</script>
+
 </body>
 </html>
+
 
 
