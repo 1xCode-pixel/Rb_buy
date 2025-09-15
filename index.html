@@ -1,4 +1,4 @@
-<!doctype html>
+
 <html lang="ru">
 <head>
 <meta charset="utf-8" />
@@ -193,50 +193,5 @@ document.getElementById('authSubmit').addEventListener('click', ()=>{
     hideAuth();
   } else {
     // register
-    const newUser = { id:'u'+Date.now(), email, pass, displayName: email.split('@')[0], created_at:new Date().toISOString() };
-    users.push(newUser); saveUsers(users);
-    setCurrentUser(newUser);
-    alert('Аккаунт создан и вы вошли (демо, без проверки почты)');
-    hideAuth();
-  }
-  document.getElementById('authEmail').value=''; document.getElementById('authPass').value='';
-});
-
-/* order flow */
-let currentSelected = null;
-function onSelectPack(robux){
-  const u = getCurrentUser();
-  if(!u){ alert('Упс... нужно зарегистрироваться или войти'); showAuth(); return; }
-  currentSelected = PACKS.find(p=>p.robux===robux) || PACKS[1];
-  document.getElementById('orderInfo').textContent = `Пакет: ${currentSelected.robux} R$ — ${currentSelected.price} ₽`;
-  document.getElementById('orderRobux').value = currentSelected.robux+' R$';
-  document.getElementById('orderPrice').value = currentSelected.price +' ₽';
-  document.getElementById('orderName').value = u.displayName || u.email;
-  document.getElementById('orderModal').style.display='flex';
-}
-
-document.getElementById('btnOrderCancel').addEventListener('click', ()=> document.getElementById('orderModal').style.display='none');
-
-document.getElementById('btnConfirmPay').addEventListener('click', ()=>{
-  const u = getCurrentUser();
-  if(!u){ alert('Нужно войти'); showAuth(); return; }
-  const name = document.getElementById('orderName').value.trim();
-  if(!name){ alert('Введите имя в Roblox'); return; }
-  if(!currentSelected){ alert('Пакет не выбран'); return; }
-  const orders = loadOrders();
-  const ord = { id:'ord_'+Date.now(), email:u.email, name, robux:currentSelected.robux, price:currentSelected.price, status:'awaiting_payment', created_at:new Date().toISOString() };
-  orders.unshift(ord); saveOrders(orders);
-  document.getElementById('orderModal').style.display='none';
-  alert('Заказ создан. Переведите ' + ord.price + ' ₽ на карту 4276 1234 5678 9010. После перевода админ подтвердит платёж в панели.');
-});
-
-/* quick helpers (so admin.html can locate the same localStorage keys) */
-window.RB_HELPERS = {
-  loadUsers, saveUsers, loadOrders, saveOrders
-};
-
-updateAuthUI();
-</script>
-</body>
-</html>
+    const newUser = { >
 
