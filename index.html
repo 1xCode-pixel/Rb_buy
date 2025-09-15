@@ -5,159 +5,161 @@
   <title>Rb_buy — Покупка Robux</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {font-family: Consolas, monospace; margin:0; background:#000; color:#0ff; overflow-x:hidden;}
-    header {background:#000; padding:16px 32px; display:flex; justify-content:space-between; position:fixed; top:0; left:0; right:0; border-bottom:1px solid rgba(0,255,255,0.1);}
-    nav a {color:#00e0ff; text-decoration:none; margin-left:20px;}
-    nav a:hover {color:#fff;}
-    main {max-width:900px; margin:120px auto; padding:20px;}
-    section {margin:40px 0; padding:20px; border-left:3px solid rgba(0,255,255,0.1); opacity:0; transform:translateY(30px); transition:opacity .6s, transform .6s;}
-    section.visible {opacity:1; transform:translateY(0);}
-    h2 {color:#00e0ff;}
-    input, button {padding:10px; margin:6px 0; border:none; border-radius:6px;}
-    input {width:100%; background:#111; color:#0ff;}
-    button {background:#00e0ff; color:#000; cursor:pointer; font-weight:bold;}
-    button:hover {background:#0ff;}
-    .hidden {display:none;}
-    .order {background:#111; padding:14px; margin:10px 0; border:1px solid rgba(0,255,255,0.2); border-radius:6px;}
-    footer{text-align:center; padding:30px; color:#00e0ff; border-top:1px solid rgba(0,255,255,0.1);}
-    html {scroll-behavior:smooth;}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Consolas, monospace;background:#000;color:#0ff;overflow-x:hidden}
+
+    /* matrix */
+    #matrixCanvas{position:fixed;inset:0;z-index:-1;display:block}
+
+    header{position:fixed;top:0;left:0;width:100%;background:#000;
+      padding:14px 24px;display:flex;justify-content:space-between;
+      align-items:center;z-index:10;border-bottom:1px solid rgba(0,255,255,0.2)}
+    .logo{font-size:20px;font-weight:bold;color:#00e0ff}
+    nav a{color:#00e0ff;text-decoration:none;margin-left:18px;font-weight:600}
+    nav a:hover{color:#fff}
+
+    main{max-width:700px;margin:120px auto;padding:20px}
+
+    section{background:rgba(0,0,0,0.6);padding:22px;border-radius:10px;
+      margin:20px 0;border:1px solid rgba(0,255,255,0.2);
+      opacity:0;transform:translateY(30px);transition:opacity .7s,transform .7s}
+    section.visible{opacity:1;transform:translateY(0)}
+
+    input,button{width:100%;padding:12px;margin:8px 0;border-radius:6px;
+      border:none;font-family:Consolas}
+    input{background:#000;color:#0ff;border:1px solid rgba(0,255,255,0.3)}
+    button{background:#00e0ff;color:#000;font-weight:bold;cursor:pointer}
+    button:hover{background:#0ff}
+
+    footer{text-align:center;padding:20px;margin-top:40px;color:#00e0ff;
+      border-top:1px solid rgba(0,255,255,0.2)}
   </style>
 </head>
 <body>
+  <canvas id="matrixCanvas"></canvas>
 
-<header>
-  <div><b>Rb_buy</b></div>
-  <nav>
-    <a href="#about">О нас</a>
-    <a href="#buy">Купить</a>
-    <a href="#login">Войти</a>
-  </nav>
-</header>
+  <header>
+    <div class="logo">Rb_buy</div>
+    <nav>
+      <a href="#buy">Купить</a>
+      <a href="#login">Войти</a>
+      <a href="admin.html">Админ</a>
+    </nav>
+  </header>
 
-<main>
-  <section id="about">
-    <h2>О нас</h2>
-    <p>Rb_buy — магазин покупки Robux. Курс: <b>1 Robux = 1.2 ₽</b>. Минимальная покупка — <b>100 Robux</b>.</p>
-    <p>Оплата переводом на карту: <b>2200 7012 3933 7337 (Артём Б.)</b></p>
-  </section>
+  <main>
+    <!-- Регистрация / Вход -->
+    <section id="login">
+      <h2>Вход / Регистрация</h2>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Пароль">
+      <button onclick="register()">Регистрация</button>
+      <button onclick="login()">Войти</button>
+      <p id="authMsg"></p>
+    </section>
 
-  <section id="login">
-    <h2>Регистрация / Вход</h2>
-    <div id="auth-forms">
-      <div id="register">
-        <h3>Регистрация</h3>
-        <input type="email" id="regEmail" placeholder="Email" required>
-        <input type="password" id="regPass" placeholder="Пароль (мин. 6 символов)" required>
-        <button onclick="register()">Зарегистрироваться</button>
-      </div>
-      <div id="loginForm">
-        <h3>Вход</h3>
-        <input type="email" id="logEmail" placeholder="Email" required>
-        <input type="password" id="logPass" placeholder="Пароль" required>
-        <button onclick="login()">Войти</button>
-      </div>
-    </div>
-    <p id="userInfo" class="hidden"></p>
-    <button id="logoutBtn" class="hidden" onclick="logout()">Выйти</button>
-  </section>
+    <!-- Покупка -->
+    <section id="buy">
+      <h2>Купить Robux</h2>
+      <p>Цена: <b>1.2 ₽</b> за 1 Robux</p>
+      <p>Минимум: <b>100 Robux</b></p>
+      <input type="number" id="robuxCount" placeholder="Количество Robux">
+      <button onclick="createOrder()">Оплатить</button>
+      <p id="orderMsg"></p>
+      <p><b>Оплата переводом</b><br>
+        Номер карты: <span style="color:#fff">2200 7012 3933 7337</span><br>
+        Получатель: <span style="color:#fff">Артём Б.</span></p>
+    </section>
+  </main>
 
-  <section id="buy">
-    <h2>Купить Robux</h2>
-    <div id="buyForm" class="hidden">
-      <input type="number" id="robuxCount" placeholder="Количество Robux" min="100">
-      <button onclick="makeOrder()">Создать заявку</button>
-      <div id="orders"></div>
-    </div>
-    <p id="buyMessage">Для покупки войдите в аккаунт.</p>
-  </section>
-</main>
+  <footer>
+    © <span id="year"></span> Rb_buy — создано при помощи 1xCode
+  </footer>
 
-<footer>
-  © <span id="year"></span> Rb_buy. Все права защищены.
-</footer>
+  <script>
+    // ---------- MATRIX ----------
+    const canvas = document.getElementById("matrixCanvas");
+    const ctx = canvas.getContext("2d");
+    const letters = "01";
+    const fontSize = 16;
+    let columns, drops;
 
-<script>
-  // Scroll reveal
-  const observer = new IntersectionObserver(entries=>{
-    entries.forEach(entry=>{
-      if(entry.isIntersecting) entry.target.classList.add('visible');
-    });
-  }, {threshold:0.2});
-  document.querySelectorAll("section").forEach(s=>observer.observe(s));
-
-  document.getElementById("year").textContent = new Date().getFullYear();
-
-  // Auth
-  let currentUser = null;
-  function register(){
-    const email = regEmail.value.trim();
-    const pass = regPass.value.trim();
-    if(pass.length < 6 || !email.includes("@")) return alert("Неверный email или пароль короткий");
-    let users = JSON.parse(localStorage.getItem("users")||"{}");
-    if(users[email]) return alert("Такой email уже зарегистрирован");
-    users[email] = pass;
-    localStorage.setItem("users", JSON.stringify(users));
-    alert("Успешная регистрация! Теперь войдите.");
-  }
-  function login(){
-    const email = logEmail.value.trim();
-    const pass = logPass.value.trim();
-    let users = JSON.parse(localStorage.getItem("users")||"{}");
-    if(users[email] && users[email] === pass){
-      currentUser = email;
-      sessionStorage.setItem("user", email);
-      updateUI();
-    } else alert("Неверный логин или пароль");
-  }
-  function logout(){
-    currentUser = null;
-    sessionStorage.removeItem("user");
-    updateUI();
-  }
-  function updateUI(){
-    currentUser = sessionStorage.getItem("user");
-    if(currentUser){
-      userInfo.textContent = "Вы вошли как: "+currentUser;
-      userInfo.classList.remove("hidden");
-      logoutBtn.classList.remove("hidden");
-      buyForm.classList.remove("hidden");
-      buyMessage.style.display="none";
-      showOrders();
-    } else {
-      userInfo.classList.add("hidden");
-      logoutBtn.classList.add("hidden");
-      buyForm.classList.add("hidden");
-      buyMessage.style.display="block";
+    function resizeCanvas(){
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      columns = Math.floor(canvas.width / fontSize);
+      drops = new Array(columns).fill(1);
     }
-  }
-  updateUI();
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
 
-  // Orders
-  function makeOrder(){
-    const count = parseInt(robuxCount.value);
-    if(isNaN(count) || count < 100) return alert("Минимум 100 Robux");
-    const cost = (count*1.2).toFixed(2);
-    const order = {user: currentUser, count, cost, status:"Ожидание перевода"};
-    let orders = JSON.parse(localStorage.getItem("orders")||"[]");
-    orders.push(order);
-    localStorage.setItem("orders", JSON.stringify(orders));
-    alert("Заявка создана. Переведите "+cost+"₽ на карту 2200 7012 3933 7337 (Артём Б.). После перевода админ подтвердит оплату.");
-    showOrders();
-  }
-  function showOrders(){
-    let orders = JSON.parse(localStorage.getItem("orders")||"[]");
-    ordersDiv = document.getElementById("orders");
-    ordersDiv.innerHTML="";
-    orders.filter(o=>o.user===currentUser).forEach((o,i)=>{
-      const div = document.createElement("div");
-      div.className="order";
-      div.textContent=`${o.count} Robux = ${o.cost}₽ | Статус: ${o.status}`;
-      ordersDiv.appendChild(div);
-    });
-  }
-</script>
+    function drawMatrix(){
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = "#00e0ff";
+      ctx.font = fontSize + "px monospace";
+      for(let i=0;i<drops.length;i++){
+        const text = letters.charAt(Math.floor(Math.random()*letters.length));
+        ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+        if(drops[i]*fontSize>canvas.height && Math.random()>0.975) drops[i]=0;
+        drops[i]++;
+      }
+    }
+    setInterval(drawMatrix,40);
+
+    // ---------- Smooth scroll ----------
+    const observer = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting) e.target.classList.add("visible");
+      });
+    }, {threshold:0.1});
+    document.querySelectorAll("section").forEach(el=>observer.observe(el));
+
+    // ---------- Auth ----------
+    function register(){
+      const email=document.getElementById("email").value;
+      const pass=document.getElementById("password").value;
+      if(!email.includes("@")||pass.length<4){
+        document.getElementById("authMsg").textContent="Введите корректные данные!";
+        return;
+      }
+      localStorage.setItem("user:"+email,pass);
+      document.getElementById("authMsg").textContent="Регистрация успешна!";
+    }
+
+    function login(){
+      const email=document.getElementById("email").value;
+      const pass=document.getElementById("password").value;
+      const saved=localStorage.getItem("user:"+email);
+      if(saved && saved===pass){
+        localStorage.setItem("currentUser",email);
+        document.getElementById("authMsg").textContent="Вход выполнен!";
+      } else {
+        document.getElementById("authMsg").textContent="Неверный логин или пароль";
+      }
+    }
+
+    // ---------- Orders ----------
+    function createOrder(){
+      const user=localStorage.getItem("currentUser");
+      if(!user){
+        document.getElementById("orderMsg").textContent="Сначала войдите!";
+        return;
+      }
+      const count=parseInt(document.getElementById("robuxCount").value);
+      if(isNaN(count)||count<100){
+        document.getElementById("orderMsg").textContent="Минимум 100 Robux!";
+        return;
+      }
+      const amount=(count*1.2).toFixed(2);
+      const orders=JSON.parse(localStorage.getItem("orders")||"[]");
+      orders.push({email:user,count,amount,paid:false});
+      localStorage.setItem("orders",JSON.stringify(orders));
+      document.getElementById("orderMsg").textContent="Заявка создана! После перевода админ подтвердит.";
+    }
+
+    // ---------- Year ----------
+    document.getElementById("year").textContent=new Date().getFullYear();
+  </script>
 </body>
 </html>
-
-
-
