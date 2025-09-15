@@ -1,134 +1,61 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin — Rbx_buy</title>
-  <meta name="robots" content="noindex">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Rb_buy — Админ панель</title>
   <style>
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:#000;color:#e6fbff;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px}
-    .panel{width:100%;max-width:1100px;background:linear-gradient(180deg,#04121b,#071826);border:1px solid rgba(0,230,255,0.06);padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
-    h1{color:#00e0ff;margin:0 0 8px}
-    .controls{display:flex;gap:8px;align-items:center;margin-bottom:12px}
-    input[type="password"]{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:#0b2530;color:#e6fbff}
-    button{padding:10px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
-    .btn-prim{background:#00e0ff;color:#001018}
-    table{width:100%;border-collapse:collapse;margin-top:12px}
-    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:left}
-    th{color:#001018;background:#00e0ff}
-    td.status{width:160px}
-    .action-btn{padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
-    .confirm{background:#00e0ff;color:#001018}
-    .sent{background:#10c46f;color:#001018}
-    .note{color:#9fb6c9;margin-top:6px;font-size:13px}
+    body{font-family:Consolas,monospace;background:#000;color:#0ff;margin:0;padding:20px}
+    h1{color:#00e0ff}
+    input,button{margin:8px 0;padding:8px;border-radius:6px;border:1px solid #0ff;background:#000;color:#0ff}
+    button{cursor:pointer;font-weight:600}
+    .hidden{display:none}
+    table{width:100%;border-collapse:collapse;margin-top:20px}
+    th,td{border:1px solid #0ff;padding:8px;text-align:left}
+    th{background:#001820}
   </style>
 </head>
 <body>
-  <div class="panel">
-    <h1>Admin — Rbx_buy</h1>
-    <div class="controls">
-      <input id="adminPwd" type="password" placeholder="Введите пароль админа">
-      <button id="loginBtn" class="btn-prim">Войти</button>
-      <button id="logoutBtn" style="display:none;background:#263238;color:#fff">Выйти</button>
-      <div style="margin-left:auto;color:#9fb6c9">Пароль демо: <b>021455Rr</b></div>
-    </div>
+  <h1>Rb_buy — Админ панель</h1>
 
-    <div id="adminArea" style="display:none">
-      <div class="note">Здесь отображаются все заявки. Нажмите «Подтвердить», когда сумма получена, затем «Отправлено» после выдачи Robux.</div>
-      <table id="ordersTable" aria-live="polite">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Ник / Email</th>
-            <th>Robux</th>
-            <th>Цена</th>
-            <th class="status">Статус</th>
-            <th>Дата</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+  <div id="loginBox">
+    <p>Введите пароль:</p>
+    <input type="password" id="pwd">
+    <button onclick="login()">Войти</button>
+  </div>
 
+  <div id="panel" class="hidden">
+    <h2>Заказы</h2>
+    <table>
+      <thead>
+        <tr><th>Имя</th><th>Robux</th><th>Цена</th><th>Дата</th></tr>
+      </thead>
+      <tbody id="orders"></tbody>
+    </table>
   </div>
 
   <script>
-    const ADMIN_PASS = '021455Rr';
-    const ORDERS_KEY = 'rbx_orders';
-
-    function loadOrders(){ return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); }
-    function saveOrders(arr){ localStorage.setItem(ORDERS_KEY, JSON.stringify(arr)); }
-
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const adminArea = document.getElementById('adminArea');
-
-    loginBtn.addEventListener('click', ()=>{
-      const v = document.getElementById('adminPwd').value;
-      if(v === ADMIN_PASS){
-        adminArea.style.display = 'block';
-        loginBtn.style.display = 'none';
-        logoutBtn.style.display = 'inline-block';
-        document.getElementById('adminPwd').value = '';
+    const PASS="021455Rr";
+    function login(){
+      const v=document.getElementById('pwd').value;
+      if(v===PASS){
+        document.getElementById('loginBox').style.display='none';
+        document.getElementById('panel').classList.remove('hidden');
         renderOrders();
-      } else {
-        alert('Неверный пароль');
-      }
-    });
-    logoutBtn.addEventListener('click', ()=>{
-      adminArea.style.display = 'none';
-      loginBtn.style.display = 'inline-block';
-      logoutBtn.style.display = 'none';
-    });
-
+      }else alert('Неверный пароль');
+    }
     function renderOrders(){
-      const tbody = document.querySelector('#ordersTable tbody');
-      tbody.innerHTML = '';
-      const orders = loadOrders();
-      if(!orders.length){
-        tbody.innerHTML = '<tr><td colspan="7" style="color:#9fb6c9">Заявок нет</td></tr>';
-        return;
-      }
-      orders.forEach((o, idx)=>{
-        const tr = document.createElement('tr');
-        const date = new Date(o.created_at).toLocaleString();
-        tr.innerHTML = `
-          <td>${o.id}</td>
-          <td>${o.nick}</td>
-          <td>${o.robux}</td>
-          <td>${o.price}</td>
-          <td class="status">${o.status}</td>
-          <td>${date}</td>
-          <td></td>
-        `;
-        const actionsTd = tr.querySelector('td:last-child');
-        if(o.status === 'awaiting_payment'){
-          const btn = document.createElement('button');
-          btn.className = 'action-btn confirm';
-          btn.textContent = 'Подтвердить оплату';
-          btn.onclick = ()=> { orders[idx].status = 'paid'; orders[idx].paid_at = new Date().toISOString(); saveOrders(orders); renderOrders(); };
-          actionsTd.appendChild(btn);
-        } else if(o.status === 'paid'){
-          const btn2 = document.createElement('button');
-          btn2.className = 'action-btn sent';
-          btn2.textContent = 'Отправлено';
-          btn2.onclick = ()=> { orders[idx].status = 'sent'; orders[idx].sent_at = new Date().toISOString(); saveOrders(orders); renderOrders(); };
-          actionsTd.appendChild(btn2);
-        } else {
-          actionsTd.textContent = '—';
-        }
+      const orders=JSON.parse(localStorage.getItem('orders')||'[]');
+      const tbody=document.getElementById('orders');
+      tbody.innerHTML='';
+      orders.forEach(o=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${o.name}</td><td>${o.robux}</td><td>${o.price} ₽</td><td>${o.date}</td>`;
         tbody.appendChild(tr);
       });
     }
-
-    // expose renderOrders to window for debug (optional)
-    window.renderOrders = renderOrders;
-
   </script>
 </body>
 </html>
-
 
 
