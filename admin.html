@@ -5,63 +5,155 @@
   <title>Rb_buy — Админ панель</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {font-family:Consolas, monospace;background:#000;color:#0ff;margin:0;padding:20px;}
+    body {
+      font-family: Consolas, monospace;
+      background:#000;
+      color:#0ff;
+      margin:0;
+      padding:20px;
+    }
     h1 {color:#00e0ff;}
-    input,button {padding:10px;margin:6px 0;border:none;border-radius:6px;}
-    input {background:#111;color:#0ff;}
-    button {background:#00e0ff;color:#000;font-weight:bold;cursor:pointer;}
+    .login-box, .admin-box {
+      background:#111;
+      padding:20px;
+      border-radius:8px;
+      max-width:500px;
+      margin:40px auto;
+      border:1px solid rgba(0,255,255,0.2);
+    }
+    input, button {
+      width:100%;
+      padding:10px;
+      margin:8px 0;
+      border:none;
+      border-radius:6px;
+    }
+    input {
+      background:#000;
+      color:#0ff;
+      border:1px solid rgba(0,255,255,0.3);
+    }
+    button {
+      background:#00e0ff;
+      color:#000;
+      font-weight:bold;
+      cursor:pointer;
+    }
     button:hover {background:#0ff;}
-    .order {background:#111;padding:14px;margin:10px 0;border:1px solid rgba(0,255,255,0.2);border-radius:6px;}
+    .order {
+      background:#111;
+      padding:14px;
+      margin:10px 0;
+      border:1px solid rgba(0,255,255,0.2);
+      border-radius:6px;
+    }
+    .paid {border-color:#0f0;color:#0f0;}
+    .order-buttons {
+      display:flex;
+      gap:8px;
+      margin-top:10px;
+    }
+    .small-btn {
+      flex:1;
+      padding:8px;
+      font-size:14px;
+    }
   </style>
 </head>
 <body>
+  <h1>Админ панель — Rb_buy</h1>
 
-<h1>Админ панель Rb_buy</h1>
-<div id="loginBox">
-  <p>Введите пароль администратора:</p>
-  <input type="password" id="adminPass">
-  <button onclick="checkPass()">Войти</button>
-</div>
+  <div id="loginBox" class="login-box">
+    <h3>Вход</h3>
+    <input type="password" id="adminPass" placeholder="Пароль">
+    <button onclick="checkPass()">Войти</button>
+    <p id="error" style="color:red;"></p>
+  </div>
 
-<div id="panel" style="display:none;">
-  <h2>Заявки</h2>
-  <div id="orders"></div>
-</div>
+  <div id="adminBox" class="admin-box" style="display:none;">
+    <h3>Заявки на оплату</h3>
+    <div id="orders"></div>
+    <button onclick="logout()">Выйти</button>
+  </div>
 
-<script>
-  const ADMIN_PASSWORD = "021455Rr";
+  <script>
+    const correctPass = "021455Rr";
 
-  function checkPass(){
-    if(adminPass.value === ADMIN_PASSWORD){
-      loginBox.style.display="none";
-      panel.style.display="block";
+    function checkPass(){
+      const pass = document.getElementById("adminPass").value;
+      if(pass === correctPass){
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("adminBox").style.display = "block";
+        loadOrders();
+      } else {
+        document.getElementById("error").textContent = "Неверный пароль!";
+      }
+    }
+
+    function loadOrders(){
+      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+      const container = document.getElementById("orders");
+      container.innerHTML = "";
+      if(orders.length === 0){
+        container.innerHTML = "<p>Заявок пока нет.</p>";
+        return;
+      }
+      orders.forEach((order, index)=>{
+        const div = document.createElement("div");
+        div.className = "order" + (order.paid ? " paid" : "");
+        div.innerHTML = `
+          <p><b>Email:</b> ${order.email}</p>
+          <p><b>Robux:</b> ${order.count}</p>
+          <p><b>Сумма:</b> ${order.amount} ₽</p>
+          <p><b>Статус:</b> ${order.paid ? "Оплачено ✅" : "Ожидает оплаты ⏳"}</p>
+        `;
+
+        const btns = document.createElement("div");
+        btns.className = "order-buttons";
+
+        if(!order.paid){
+          const confirmBtn = document.createElement("button");
+          confirmBtn.textContent = "Подтвердить";
+          confirmBtn.className = "small-btn";
+          confirmBtn.onclick = ()=>markPaid(index);
+          btns.appendChild(confirmBtn);
+        }
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Удалить";
+        deleteBtn.className = "small-btn";
+        deleteBtn.onclick = ()=>deleteOrder(index);
+        btns.appendChild(deleteBtn);
+
+        div.appendChild(btns);
+        container.appendChild(div);
+      });
+    }
+
+    function markPaid(i){
+      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+      if(orders[i]){
+        orders[i].paid = true;
+        localStorage.setItem("orders", JSON.stringify(orders));
+        loadOrders();
+      }
+    }
+
+    function deleteOrder(i){
+      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+      orders.splice(i,1);
+      localStorage.setItem("orders", JSON.stringify(orders));
       loadOrders();
-    } else alert("Неверный пароль");
-  }
+    }
 
-  function loadOrders(){
-    let orders = JSON.parse(localStorage.getItem("orders")||"[]");
-    const box = document.getElementById("orders");
-    box.innerHTML="";
-    orders.forEach((o,i)=>{
-      const div = document.createElement("div");
-      div.className="order";
-      div.innerHTML=`<b>${o.user}</b> — ${o.count} Robux = ${o.cost}₽ | Статус: ${o.status} 
-        <button onclick="confirmOrder(${i})">Подтвердить</button>`;
-      box.appendChild(div);
-    });
-  }
-
-  function confirmOrder(index){
-    let orders = JSON.parse(localStorage.getItem("orders")||"[]");
-    orders[index].status="Оплачено ✅";
-    localStorage.setItem("orders", JSON.stringify(orders));
-    loadOrders();
-  }
-</script>
-
+    function logout(){
+      document.getElementById("adminBox").style.display = "none";
+      document.getElementById("loginBox").style.display = "block";
+    }
+  </script>
 </body>
 </html>
+
 
 
 
