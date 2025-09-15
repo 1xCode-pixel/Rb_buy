@@ -1,158 +1,177 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Rb_buy — Купить Robux</title>
-  <meta name="description" content="Rb_buy — купить Robux по курсу 1.2₽ за Robux. Простое оформление заказа и подтверждение оплаты." />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Rb_buy — Покупка Robux</title>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Consolas, monospace;background:#000;color:#0ff;overflow-x:hidden}
-    #matrixCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:-1;display:block}
-    header{position:fixed;left:0;top:0;width:100%;display:flex;justify-content:space-between;align-items:center;padding:14px 32px;background:#000;z-index:10;border-bottom:1px solid rgba(0,255,200,0.06)}
-    .logo{height:64px}
-    nav a{color:#00e0ff;text-decoration:none;margin-left:18px;font-weight:600;transition:color .18s}
-    nav a:hover{color:#fff}
-    main{max-width:1100px;margin:110px auto;padding:20px}
-    section{margin:28px 0;padding:26px;border-radius:12px;background:transparent;transition:opacity .7s,transform .7s;opacity:0;transform:translateY(30px);border-left:3px solid rgba(0,200,255,0.06)}
-    section.visible{opacity:1;transform:translateY(0)}
-    h2{color:#00e0ff;margin-bottom:12px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
-    .card{background:rgba(0,0,0,0.6);padding:18px;border-radius:10px;border:1px solid rgba(0,255,255,0.06);text-align:center;transition:transform .25s,box-shadow .25s}
-    .card:hover{transform:translateY(-6px);box-shadow:0 8px 30px rgba(0,200,255,0.06)}
-    .card h3{margin-bottom:6px}
-    .card button{margin-top:12px;padding:8px 14px;background:#00e0ff;color:#000;border:none;border-radius:8px;cursor:pointer;font-weight:600}
-    .card button:hover{background:#00bcd4}
-    footer{text-align:center;color:#00e0ff;padding:30px 10px;border-top:1px solid rgba(0,255,200,0.04);margin-top:40px}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:100}
-    .modal{background:#000;padding:20px;border:1px solid #0ff;border-radius:10px;max-width:400px;width:90%;color:#0ff}
-    .modal label{display:block;margin-top:12px;margin-bottom:4px}
-    .modal input{width:100%;padding:8px;background:#000;border:1px solid #0ff;color:#0ff;border-radius:6px}
-    .modal button{margin-top:14px;padding:10px;width:100%;border:none;border-radius:8px;font-weight:600;cursor:pointer}
-    .modal .confirm{background:#00e0ff;color:#000}
-    .modal .cancel{background:transparent;border:1px solid #0ff;color:#0ff;margin-top:6px}
+    * { box-sizing:border-box; margin:0; padding:0 }
+    body { font-family:Consolas, monospace; background:#000; color:#0ff; overflow-x:hidden; scroll-behavior:smooth; }
+
+    header { position:fixed; top:0; left:0; width:100%; background:#000; display:flex; justify-content:space-between; align-items:center; padding:16px 32px; border-bottom:1px solid rgba(0,255,255,0.1); z-index:100; }
+    nav a { color:#00e0ff; text-decoration:none; margin-left:20px; font-weight:600; transition:color .2s; }
+    nav a:hover { color:#fff; }
+
+    main { max-width:900px; margin:100px auto; padding:20px; }
+
+    section { margin:40px 0; padding:28px; border-left:3px solid rgba(0,255,255,0.15); border-radius:10px; background:rgba(0,0,0,0.6); opacity:0; transform:translateY(40px); transition:opacity .8s ease, transform .8s ease; }
+    section.visible { opacity:1; transform:translateY(0); }
+    h2 { margin-bottom:14px; color:#00e0ff; }
+
+    .calc-box, .auth-box { background:rgba(0,0,0,0.7); border:1px solid rgba(0,255,255,0.15); padding:20px; border-radius:10px; text-align:center; }
+    input { width:100%; max-width:250px; padding:10px; margin:10px 0; border:1px solid #00e0ff; border-radius:6px; background:#000; color:#0ff; text-align:center; }
+    .btn { display:inline-block; margin-top:14px; padding:10px 16px; background:#00e0ff; color:#000; border:none; border-radius:6px; font-weight:bold; cursor:pointer; transition:background .2s; }
+    .btn:hover { background:#00bcd4; }
+
+    footer { text-align:center; padding:30px 10px; border-top:1px solid rgba(0,255,255,0.1); color:#00e0ff; }
+
+    .modal { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; opacity:0; pointer-events:none; transition:opacity .4s; }
+    .modal.active { opacity:1; pointer-events:auto; }
+    .modal-content { background:#000; border:1px solid #00e0ff; padding:30px; border-radius:10px; text-align:center; width:90%; max-width:400px; animation:fadeIn .5s ease; }
+    .modal-content h3 { margin-bottom:20px; color:#00e0ff; }
+    .close-btn { margin-top:20px; padding:8px 14px; background:#00e0ff; color:#000; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
+    @keyframes fadeIn { from { opacity:0; transform:scale(0.9);} to { opacity:1; transform:scale(1);} }
   </style>
 </head>
 <body>
-  <canvas id="matrixCanvas"></canvas>
-
   <header>
-    <img src="logo.png" alt="Rb_buy logo" class="logo">
+    <h1 style="color:#00e0ff;">Rb_buy</h1>
     <nav>
-      <a href="#packs">Пакеты</a>
-      <a href="#faq">FAQ</a>
+      <a href="#about">О нас</a>
+      <a href="#shop">Купить</a>
       <a href="#contact">Контакты</a>
+      <a href="#auth">Войти</a>
     </nav>
   </header>
 
   <main>
-    <section id="packs">
-      <h2>Пакеты Robux</h2>
-      <div class="grid">
-        <div class="card">
-          <h3>400 Robux</h3>
-          <p>Цена: 480 ₽</p>
-          <button onclick="openOrder(400,480)">Купить</button>
-        </div>
-        <div class="card">
-          <h3>1200 Robux</h3>
-          <p>Цена: 1440 ₽</p>
-          <button onclick="openOrder(1200,1440)">Купить</button>
-        </div>
-        <div class="card">
-          <h3>2500 Robux</h3>
-          <p>Цена: 3000 ₽</p>
-          <button onclick="openOrder(2500,3000)">Купить</button>
-        </div>
+    <section id="about">
+      <h2>О нас</h2>
+      <p><b>Rb_buy</b> — удобный способ приобрести Robux. Минимум 100 Robux. Курс: <b>1.2₽</b> за Robux.</p>
+    </section>
+
+    <section id="shop">
+      <h2>Калькулятор покупки</h2>
+      <div class="calc-box">
+        <p>Введите количество Robux (минимум 100):</p>
+        <input type="number" id="robuxInput" value="100" min="100" step="50">
+        <p id="priceText">Цена: 120₽</p>
+        <button class="btn" id="buyBtn">Купить</button>
+        <p id="authWarn" style="color:red;display:none;margin-top:10px;">Сначала войдите!</p>
       </div>
     </section>
 
-    <section id="faq">
-      <h2>FAQ</h2>
-      <p><strong>Как проходит оплата?</strong><br> После выбора пакета вы получите реквизиты для перевода. Затем подтвердите оплату.</p>
-      <p><strong>Когда я получу Robux?</strong><br> После проверки перевода администратор подтвердит заказ и отправит вам Robux.</p>
+    <section id="auth">
+      <h2>Авторизация</h2>
+      <div class="auth-box">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Пароль (мин. 8 символов)" required>
+        <button class="btn" id="registerBtn">Регистрация</button>
+        <button class="btn" id="loginBtn">Войти</button>
+        <p id="authMsg" style="margin-top:10px;color:#0f0;"></p>
+      </div>
     </section>
 
     <section id="contact">
       <h2>Контакты</h2>
-      <p>Email: support@rb-buy.com</p>
+      <p>Оплата переводом на карту:</p>
+      <p><b>2200 7012 3933 7337</b></p>
+      <p>Получатель: Артём Б.</p>
     </section>
   </main>
 
   <footer>
-    © <span id="year"></span> Rb_buy — создано при помощи 1xCode
+    © <span id="year"></span> Rb_buy
   </footer>
 
-  <!-- Modal -->
-  <div class="modal-backdrop" id="orderModal">
-    <div class="modal">
-      <h3>Оформление заказа</h3>
-      <div id="orderInfo"></div>
-      <label for="username">Ваш ник в Roblox</label>
-      <input id="username" placeholder="Username123">
-      <button class="confirm" onclick="placeOrder()">Я оплатил</button>
-      <button class="cancel" onclick="closeOrder()">Отмена</button>
+  <!-- modal -->
+  <div class="modal" id="paymentModal">
+    <div class="modal-content">
+      <h3 id="modalTitle">Оплата</h3>
+      <p>Переведите деньги на карту <br><b>2200 7012 3933 7337</b><br>Получатель: Артём Б.</p>
+      <p>После перевода напишите в поддержку для подтверждения.</p>
+      <button class="close-btn">Закрыть</button>
     </div>
   </div>
 
   <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
+    const robuxInput=document.getElementById("robuxInput");
+    const priceText=document.getElementById("priceText");
+    const buyBtn=document.getElementById("buyBtn");
+    const modal=document.getElementById("paymentModal");
+    const modalTitle=document.getElementById("modalTitle");
+    const authWarn=document.getElementById("authWarn");
 
-    const modal=document.getElementById('orderModal');
-    let currentOrder={};
-    function openOrder(robux,price){
-      currentOrder={robux,price};
-      document.getElementById('orderInfo').innerText=`Пакет: ${robux} Robux — ${price} ₽`;
-      modal.style.display='flex';
-    }
-    function closeOrder(){modal.style.display='none'}
-    function placeOrder(){
-      const name=document.getElementById('username').value.trim();
-      if(!name){alert('Введите ник в Roblox');return;}
-      const orders=JSON.parse(localStorage.getItem('orders')||'[]');
-      orders.push({...currentOrder,name,date:new Date().toLocaleString()});
-      localStorage.setItem('orders',JSON.stringify(orders));
-      alert('Заказ отправлен! Ожидайте подтверждения.');
-      closeOrder();
-    }
+    // курс
+    const rate=1.2;
+    robuxInput.addEventListener("input",()=>{
+      let val=parseInt(robuxInput.value)||0;
+      if(val<100){val=100; robuxInput.value=100;}
+      const price=(val*rate).toFixed(2);
+      priceText.textContent="Цена: "+price+"₽";
+    });
 
-    // Matrix background
-    const canvas=document.getElementById('matrixCanvas');
-    const ctx=canvas.getContext('2d');
-    const letters='01';
-    const fontSize=16;
-    let columns=0;
-    let drops=[];
-    function resizeCanvas(){
-      canvas.width=window.innerWidth;
-      canvas.height=window.innerHeight;
-      columns=Math.floor(canvas.width/fontSize);
-      drops=new Array(columns).fill(1);
-    }
-    resizeCanvas();
-    window.addEventListener('resize',resizeCanvas);
-    function drawMatrix(){
-      ctx.fillStyle='rgba(0,0,0,0.1)';
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.fillStyle='#00e0ff';
-      ctx.font=fontSize+'px monospace';
-      for(let i=0;i<drops.length;i++){
-        const text=letters.charAt(Math.floor(Math.random()*letters.length));
-        ctx.fillText(text,i*fontSize,drops[i]*fontSize);
-        if(drops[i]*fontSize>canvas.height&&Math.random()>0.975){drops[i]=0}
-        drops[i]++;
+    // localStorage auth
+    let loggedIn=false;
+    const email=document.getElementById("email");
+    const password=document.getElementById("password");
+    const registerBtn=document.getElementById("registerBtn");
+    const loginBtn=document.getElementById("loginBtn");
+    const authMsg=document.getElementById("authMsg");
+
+    registerBtn.addEventListener("click",()=>{
+      if(password.value.length<8 || !/\d/.test(password.value) || !/[A-Za-z]/.test(password.value)){
+        authMsg.style.color="red";
+        authMsg.textContent="Пароль должен быть 8+ символов (буквы и цифры)";
+        return;
       }
-    }
-    setInterval(drawMatrix,40);
+      localStorage.setItem("userEmail",email.value);
+      localStorage.setItem("userPass",password.value);
+      authMsg.style.color="#0f0";
+      authMsg.textContent="Регистрация успешна! Теперь войдите.";
+    });
 
-    // scroll reveal
-    const observer=new IntersectionObserver((entries)=>{
-      entries.forEach(entry=>{
-        if(entry.isIntersecting) entry.target.classList.add('visible');
+    loginBtn.addEventListener("click",()=>{
+      if(email.value===localStorage.getItem("userEmail") && password.value===localStorage.getItem("userPass")){
+        loggedIn=true;
+        authMsg.style.color="#0f0";
+        authMsg.textContent="Вход выполнен!";
+      } else {
+        authMsg.style.color="red";
+        authMsg.textContent="Неверные данные!";
+      }
+    });
+
+    buyBtn.addEventListener("click",()=>{
+      if(!loggedIn){
+        authWarn.style.display="block";
+        return;
+      }
+      authWarn.style.display="none";
+      const val=parseInt(robuxInput.value);
+      if(val>=100){
+        const price=(val*rate).toFixed(2);
+        modalTitle.textContent=`Вы выбрали: ${val} Robux — ${price}₽`;
+        modal.classList.add("active");
+      }
+    });
+
+    modal.querySelector(".close-btn").addEventListener("click",()=>{
+      modal.classList.remove("active");
+    });
+
+    // плавное появление секций
+    const observer = new IntersectionObserver(entries=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting) e.target.classList.add('visible');
       });
-    },{threshold:0.1});
-    document.querySelectorAll('section').forEach(el=>observer.observe(el));
+    },{threshold:0.2});
+    document.querySelectorAll("section").forEach(sec=>observer.observe(sec));
+
+    // год
+    document.getElementById("year").textContent=new Date().getFullYear();
   </script>
 </body>
 </html>
+
 
