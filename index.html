@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Rb_buy — Магазин Robux</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b1b2b;--muted:#9fb6c9;--accent:#00d9ff;--card:rgba(255,255,255,0.03)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:#eaf6ff}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:linear-gradient(180deg,rgba(0,0,0,0.4),transparent)}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#0b8cff);display:flex;align-items:center;justify-content:center;font-weight:700}
+nav a, nav button{color:var(--muted);margin-left:14px;background:none;border:0;cursor:pointer}
+.hero{padding:48px 28px;text-align:center}
+h1{font-size:32px;margin:0 0 10px}
+.lead{color:var(--muted);margin-bottom:18px}
+.cards{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.card{width:220px;background:var(--card);padding:16px;border-radius:10px;text-align:center;border:1px solid rgba(255,255,255,0.02)}
+.card h3{margin:8px 0;color:#fff}
+.price{color:var(--accent);font-weight:700;margin-bottom:10px}
+.cta{background:var(--accent);color:#001022;padding:10px 14px;border-radius:10px;border:0;cursor:pointer}
+footer{padding:28px;text-align:center;color:var(--muted);margin-top:30px}
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.7);z-index:50}
+.modal .box{background:#071223;padding:20px;border-radius:10px;width:420px;max-width:94%;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
+.input, input, select{width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:#eaf6ff}
+.small{color:var(--muted);font-size:13px;margin-top:8px}
+.linkish{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
+.admin-link{color:var(--muted);font-size:13px}
+.notice{background:#071a26;padding:10px;border-radius:8px;margin-top:10px;color:var(--muted);font-size:14px}
+@media(max-width:700px){.cards{flex-direction:column;align-items:center}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">Rb</div>
+    <div>
+      <div style="font-weight:700">Rb_buy</div>
+      <div style="font-size:12px;color:var(--muted)">1 R$ = 1.2 ₽</div>
+    </div>
+  </div>
+
+  <nav>
+    <a href="#packs">Пакеты</a>
+    <a href="#faq">FAQ</a>
+    <button class="cta" id="btnBuyTop">Купить</button>
+    <button class="linkish" id="btnAuth">Вход / Регистрация</button>
+    <a href="admin.html" class="admin-link">Admin</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Купить Robux — быстро и просто</h1>
+    <p class="lead">Оплата переводом на карту. Перед оплатой нужно войти в аккаунт.</p>
+
+    <div class="cards" id="packs">
+      <!-- пакеты будут заполнены скриптом -->
+    </div>
+
+    <div class="notice">Демо: регистрация локальная, без реальной проверки почты. Пароли хранятся в localStorage (только для теста).</div>
+  </section>
+
+  <section id="faq" style="padding:24px 28px 60px">
+    <h2 style="text-align:center;margin-bottom:10px">FAQ</h2>
+    <details style="max-width:900px;margin:10px auto;color:var(--muted)"><summary>Как оплачивать?</summary><p>После оформления заказа появятся реквизиты карты. Сделайте перевод и нажмите «Я оплатил».</p></details>
+    <details style="max-width:900px;margin:10px auto;color:var(--muted)"><summary>Сколько ждать?</summary><p>После подтверждения оплаты админ отправит Robux; обычно до 30 минут.</p></details>
+  </section>
+</main>
+
+<footer>
+  © <span id="year"></span> Rb_buy — демо
+</footer>
+
+<!-- ORDER MODAL (requires login) -->
+<div id="orderModal" class="modal" aria-hidden="true">
+  <div class="box">
+    <h3 style="margin:0 0 6px">Оформление заказа</h3>
+    <div id="orderInfo" class="small">Пакет —</div>
+
+    <label>Имя в Roblox</label>
+    <input id="orderName" class="input" placeholder="Username123">
+
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input id="orderRobux" class="input" readonly style="flex:1">
+      <input id="orderPrice" class="input" readonly style="flex:1">
+    </div>
+
+    <div class="small" style="margin-top:10px">Реквизиты карты: <b>4276 1234 5678 9010</b></div>
+
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="cta" id="btnConfirmPay">Оплатил (Я перевёл)</button>
+      <button class="linkish" id="btnOrderCancel">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div id="authModal" class="modal" aria-hidden="true">
+  <div class="box">
+    <h3 style="margin:0 0 6px" id="authTitle">Вход / Регистрация</h3>
+    <div class="small">Если аккаунт есть — войдите, иначе — создайте новый.</div>
+
+    <label style="margin-top:10px">Email</label>
+    <input id="authEmail" class="input" placeholder="email@domain.com">
+
+    <label style="margin-top:8px">Пароль</label>
+    <input id="authPass" class="input" type="password" placeholder="Минимум 6 символов">
+
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="cta" id="authSubmit">Войти / Зарегистрироваться</button>
+      <button class="linkish" id="authCancel">Отмена</button>
+    </div>
+    <div class="small" style="margin-top:8px;color:var(--muted)">Пароль минимум 6 символов. Email проверяется на формат.</div>
+  </div>
+</div>
+
+<script>
+/* Simple client-side site with localStorage users & orders.
+   - Users: stored in localStorage 'rb_users' (array of {id,email,pass,displayName})
+   - Orders: stored in localStorage 'rb_orders' (array of orders)
+   - sessionStorage holds currently logged user under 'rb_current'
+*/
+
+document.getElementById('year').innerText = new Date().getFullYear();
+
+const RATE = 1.2;
+const PACKS = [
+  {robux:400,label:'400 R$',price:Math.round(400*RATE)},
+  {robux:1200,label:'1200 R$',price:Math.round(1200*RATE)},
+  {robux:2500,label:'2500 R$',price:Math.round(2500*RATE)},
+  {robux:5000,label:'5000 R$',price:Math.round(5000*RATE)}
+];
+
+function loadUsers(){ return JSON.parse(localStorage.getItem('rb_users')||'[]'); }
+function saveUsers(u){ localStorage.setItem('rb_users',JSON.stringify(u)); }
+function loadOrders(){ return JSON.parse(localStorage.getItem('rb_orders')||'[]'); }
+function saveOrders(o){ localStorage.setItem('rb_orders',JSON.stringify(o)); }
+
+function getCurrentUser(){ return JSON.parse(sessionStorage.getItem('rb_current')||'null'); }
+function setCurrentUser(u){ sessionStorage.setItem('rb_current', JSON.stringify(u)); updateAuthUI(); }
+function clearCurrentUser(){ sessionStorage.removeItem('rb_current'); updateAuthUI(); }
+
+function updateAuthUI(){
+  const b = document.getElementById('btnAuth');
+  const u = getCurrentUser();
+  b.textContent = u ? u.email : 'Вход / Регистрация';
+}
+
+updateAuthUI();
+
+/* render packs */
+const packsEl = document.getElementById('packs');
+PACKS.forEach(p=>{
+  const el = document.createElement('div');
+  el.className='card';
+  el.innerHTML = `<small>${p.label}</small><h3>${p.robux} R$</h3><div class="price">${p.price} ₽</div><button class="cta" data-robux="${p.robux}">Купить</button>`;
+  packsEl.appendChild(el);
+  el.querySelector('button').addEventListener('click', ()=> onSelectPack(p.robux));
+});
+
+/* handlers for buy top button */
+document.getElementById('btnBuyTop').addEventListener('click', ()=> {
+  const u = getCurrentUser();
+  if(!u){ alert('Упс... нужно зарегистрироваться или войти'); showAuth(); return; }
+  onSelectPack(1200);
+});
+
+/* auth modal */
+function showAuth(){ document.getElementById('authModal').style.display='flex'; }
+function hideAuth(){ document.getElementById('authModal').style.display='none'; }
+document.getElementById('btnAuth').addEventListener('click', showAuth);
+document.getElementById('authCancel').addEventListener('click', hideAuth);
+
+function validateEmail(e){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e); }
+function validatePassword(p){ return p && p.length>=6; }
+
+document.getElementById('authSubmit').addEventListener('click', ()=>{
+  const email = document.getElementById('authEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('authPass').value;
+  if(!validateEmail(email)){ alert('Введите корректный email'); return; }
+  if(!validatePassword(pass)){ alert('Пароль должен быть минимум 6 символов'); return; }
+
+  const users = loadUsers();
+  let user = users.find(u=>u.email===email);
+  if(user){
+    // login
+    if(user.pass !== pass){ alert('Неверный пароль'); return; }
+    setCurrentUser(user);
+    alert('Вход выполнен');
+    hideAuth();
+  } else {
+    // register
+    const newUser = { id:'u'+Date.now(), email, pass, displayName: email.split('@')[0], created_at:new Date().toISOString() };
+    users.push(newUser); saveUsers(users);
+    setCurrentUser(newUser);
+    alert('Аккаунт создан и вы вошли (демо, без проверки почты)');
+    hideAuth();
+  }
+  document.getElementById('authEmail').value=''; document.getElementById('authPass').value='';
+});
+
+/* order flow */
+let currentSelected = null;
+function onSelectPack(robux){
+  const u = getCurrentUser();
+  if(!u){ alert('Упс... нужно зарегистрироваться или войти'); showAuth(); return; }
+  currentSelected = PACKS.find(p=>p.robux===robux) || PACKS[1];
+  document.getElementById('orderInfo').textContent = `Пакет: ${currentSelected.robux} R$ — ${currentSelected.price} ₽`;
+  document.getElementById('orderRobux').value = currentSelected.robux+' R$';
+  document.getElementById('orderPrice').value = currentSelected.price +' ₽';
+  document.getElementById('orderName').value = u.displayName || u.email;
+  document.getElementById('orderModal').style.display='flex';
+}
+
+document.getElementById('btnOrderCancel').addEventListener('click', ()=> document.getElementById('orderModal').style.display='none');
+
+document.getElementById('btnConfirmPay').addEventListener('click', ()=>{
+  const u = getCurrentUser();
+  if(!u){ alert('Нужно войти'); showAuth(); return; }
+  const name = document.getElementById('orderName').value.trim();
+  if(!name){ alert('Введите имя в Roblox'); return; }
+  if(!currentSelected){ alert('Пакет не выбран'); return; }
+  const orders = loadOrders();
+  const ord = { id:'ord_'+Date.now(), email:u.email, name, robux:currentSelected.robux, price:currentSelected.price, status:'awaiting_payment', created_at:new Date().toISOString() };
+  orders.unshift(ord); saveOrders(orders);
+  document.getElementById('orderModal').style.display='none';
+  alert('Заказ создан. Переведите ' + ord.price + ' ₽ на карту 4276 1234 5678 9010. После перевода админ подтвердит платёж в панели.');
+});
+
+/* quick helpers (so admin.html can locate the same localStorage keys) */
+window.RB_HELPERS = {
+  loadUsers, saveUsers, loadOrders, saveOrders
+};
+
+updateAuthUI();
+</script>
+</body>
+</html>
+
